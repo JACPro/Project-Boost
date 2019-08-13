@@ -20,10 +20,11 @@ public class Rocket : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        ProcessInput();
+        Thrust();
+        Rotate();
     }
 
-    private void ProcessInput()
+    private void Thrust()
     {
         if (Input.GetKey(KeyCode.Space) || Input.GetKey(KeyCode.W))
         {
@@ -31,39 +32,26 @@ public class Rocket : MonoBehaviour
             {
                 sound.Play();
             }
-            Thrust();
-            Debug.Log("huh");
+            rb.AddRelativeForce(Vector3.up);
         }
-
-
-        if (Input.GetKey(KeyCode.A))
-        {
-            RotateLeft();
-        } else if (Input.GetKey(KeyCode.D))
-        {
-            RotateRight();
-        }
-
         if (Input.GetKeyUp(KeyCode.Space) || Input.GetKeyUp(KeyCode.W))
         {
             sound.Stop();
         }
     }
 
-    private void RotateLeft()
+    private void Rotate()
     {
-        transform.Rotate(Vector3.forward);
-    }
+        rb.freezeRotation = true; //nullify environmental impact on rotation
+        
+        if (Input.GetKey(KeyCode.A))
+        {
+            transform.Rotate(Vector3.forward);
+        } else if (Input.GetKey(KeyCode.D))
+        {
+            transform.Rotate(Vector3.back);
+        }
 
-    private void RotateRight()
-    {
-        transform.Rotate(Vector3.back);
-
-    }
-
-    private void Thrust()
-    {
-        rb.AddRelativeForce(Vector3.up);
-        Debug.Log("thrust");
+        rb.freezeRotation = false; //resume normal rotation physics
     }
 }
