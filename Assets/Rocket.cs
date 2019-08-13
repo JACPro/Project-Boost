@@ -10,6 +10,13 @@ public class Rocket : MonoBehaviour
 
     AudioSource sound;
 
+
+    [SerializeField]
+    float mainThrust = 10f;
+
+    [SerializeField]
+    float rsThrust = 100f;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -32,7 +39,7 @@ public class Rocket : MonoBehaviour
             {
                 sound.Play();
             }
-            rb.AddRelativeForce(Vector3.up);
+            rb.AddRelativeForce(Vector3.up * mainThrust);
         }
         if (Input.GetKeyUp(KeyCode.Space) || Input.GetKeyUp(KeyCode.W))
         {
@@ -46,12 +53,31 @@ public class Rocket : MonoBehaviour
         
         if (Input.GetKey(KeyCode.A))
         {
-            transform.Rotate(Vector3.forward);
+            transform.Rotate(Vector3.forward * rsThrust * Time.deltaTime);
         } else if (Input.GetKey(KeyCode.D))
         {
-            transform.Rotate(Vector3.back);
+            transform.Rotate(Vector3.back * rsThrust * Time.deltaTime);
         }
 
         rb.freezeRotation = false; //resume normal rotation physics
+    }
+
+    private void OnCollisionEnter(Collision collision)
+    {
+        switch (collision.gameObject.tag)
+        {
+            case "Friendly":
+                print("OK");
+                break;
+            case "Fuel":
+                print("Added Fuel");
+                break;
+            case "Finish":
+                print("Congratulations!");
+                break;
+            default:
+                print("Dead");
+                break;
+        }
     }
 }
