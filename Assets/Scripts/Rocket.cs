@@ -23,8 +23,7 @@ public class Rocket : MonoBehaviour
 
     [SerializeField] float levelLoadDelay = 2f;
 
-    enum State { Alive, Dying, Transcending }
-    State state = State.Alive;
+    bool isTransitioning = false;
 
     bool collisionsDisabled = false;
 
@@ -38,9 +37,9 @@ public class Rocket : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (state == State.Alive) {
+        if (!isTransitioning) {
             ThrustInput();
-            Rotate();
+            RotationInput();
             if (Debug.isDebugBuild)
             {
                 DebugInput();
@@ -82,24 +81,31 @@ public class Rocket : MonoBehaviour
         engineParticles.Play();
     }
 
-    private void Rotate()
+    private void RotationInput()
     {
-        rb.freezeRotation = true; //nullify environmental impact on rotation
         
         if (Input.GetKey(KeyCode.A))
         {
-            transform.Rotate(Vector3.forward * rsThrust * Time.deltaTime);
-        } else if (Input.GetKey(KeyCode.D))
+            Rotate(Vector3.forward);
+        }
+        else if (Input.GetKey(KeyCode.D))
         {
-            transform.Rotate(Vector3.back * rsThrust * Time.deltaTime);
+            Rotate(Vector3.back);
         }
 
+    }
+
+    private void Rotate(Vector3 rotationVector)
+    {
+        rb.freezeRotation = true; //nullify environmental impact on rotation
+        transform.Rotate(rotationVector * rsThrust * Time.deltaTime);
         rb.freezeRotation = false; //resume normal rotation physics
     }
 
+
     private void OnCollisionEnter(Collision collision)
     {
-        if (state != State.Alive || collisionsDisabled) { return; } //Ignore collisions when dead
+        if (isTransitioning || collisionsDisabled) { return; } //Ignore collisions when dead
 
         switch (collision.gameObject.tag)
         {
@@ -124,7 +130,7 @@ public class Rocket : MonoBehaviour
         audioSource.PlayOneShot(victorySound);
         engineParticles.Stop();
         victoryParticles.Play();
-        state = State.Transcending;
+        isTransitioning = true;
         Invoke("LoadNextScene", levelLoadDelay);
     }
 
@@ -134,8 +140,8 @@ public class Rocket : MonoBehaviour
         audioSource.PlayOneShot(deathSound);
         engineParticles.Stop();
         explosionParticles.Play();
-        state = State.Dying;
-        Invoke("LoadFirstScene", levelLoadDelay);
+        isTransitioning = true;
+        Invoke("ReloadScene", levelLoadDelay);
     }
 
     private void LoadFirstScene()
@@ -143,8 +149,19 @@ public class Rocket : MonoBehaviour
         SceneManager.LoadScene(0);
     }
 
+    private void ReloadScene()
+    {
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
     private void LoadNextScene()
     {
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+        if (SceneManager.GetActiveScene().buildIndex != SceneManager.sceneCountInBuildSettings - 1)
+        {
+            SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex + 1);
+        } else
+        {
+            LoadFirstScene();
+        }
     }
 }
