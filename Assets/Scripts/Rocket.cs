@@ -27,6 +27,8 @@ public class Rocket : MonoBehaviour
 
     bool collisionsDisabled = false;
 
+    bool canRotate = false;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -60,7 +62,7 @@ public class Rocket : MonoBehaviour
 
     private void ThrustInput()
     {
-        if (Input.GetKey(KeyCode.Space) || Input.GetKey(KeyCode.W))
+        if (Input.GetKey(KeyCode.Space) || Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow))
         {
             ApplyThrust();
         }
@@ -83,16 +85,17 @@ public class Rocket : MonoBehaviour
 
     private void RotationInput()
     {
-        
-        if (Input.GetKey(KeyCode.A))
+        if (canRotate)
         {
-            Rotate(Vector3.forward);
+            if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow))
+            {
+                Rotate(Vector3.forward);
+            }
+            else if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow))
+            {
+                Rotate(Vector3.back);
+            }
         }
-        else if (Input.GetKey(KeyCode.D))
-        {
-            Rotate(Vector3.back);
-        }
-
     }
 
     private void Rotate(Vector3 rotationVector)
@@ -110,7 +113,7 @@ public class Rocket : MonoBehaviour
         switch (collision.gameObject.tag)
         {
             case "Friendly":
-                //nothing happens
+                canRotate = false;
                 break;
             case "Fuel": //todo Add Fuel
                 print("Added Fuel");
@@ -121,6 +124,14 @@ public class Rocket : MonoBehaviour
             default:
                 DeathSequence();
                 break;
+        }
+    }
+
+    private void OnCollisionExit(Collision collision)
+    {
+        if (collision.gameObject.tag == "Friendly")
+        {
+            canRotate = true;
         }
     }
 
